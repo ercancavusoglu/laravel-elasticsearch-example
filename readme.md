@@ -26,14 +26,14 @@ Entegrasyon veya destek için issue açabilir, `ercancavusoglu@yandex.com.tr` ad
     //Run method with artisan
     //php artisan migrate
 
-##Composer.json
+## Composer.json
         
     "elasticquent/elasticquent": "dev-master",
     "laravelcollective/html": "^5.2.0"
 
     //Add to require section at composer.json
     
-##Item.php (Model)
+## Item.php (Model)
         
     namespace App;
 
@@ -48,12 +48,12 @@ Entegrasyon veya destek için issue açabilir, `ercancavusoglu@yandex.com.tr` ad
 
     //Don't forget use ElasticquentTrait
 
-##Routes.php
+## Routes.php
 
     Route::get('ItemSearch', 'ItemSearchController@index');
     Route::post('ItemSearchCreate', 'ItemSearchController@create');
 
-##ItemSearchController.php
+## ItemSearchController.php
 
     class ItemSearchController extends Controller
     {
