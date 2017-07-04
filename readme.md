@@ -1,27 +1,82 @@
-# Laravel PHP Framework
+# Laravel 5 Search Using Elasticsearch
 
-[![Build Status](https://travis-ci.org/laravel/framework.svg)](https://travis-ci.org/laravel/framework)
-[![Total Downloads](https://poser.pugx.org/laravel/framework/d/total.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Stable Version](https://poser.pugx.org/laravel/framework/v/stable.svg)](https://packagist.org/packages/laravel/framework)
-[![Latest Unstable Version](https://poser.pugx.org/laravel/framework/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
-[![License](https://poser.pugx.org/laravel/framework/license.svg)](https://packagist.org/packages/laravel/framework)
+Laravel'de kullanabileceğiniz elasticsearch paketi, örnek kullanımı ve kurulumu aşağıda bulabilirsiniz.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as authentication, routing, sessions, queueing, and caching.
+Entegrasyon veya destek için issue açabilir, `ercancavusoglu@yandex.com.tr` adresinden veya [@devredisibirak](http://twitter.com/devredisibirak) twitter hesabımdan bana ulaşabilirsiniz.
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications. A superb inversion of control container, expressive migration system, and tightly integrated unit testing support give you the tools you need to build any application with which you are tasked.
+## Migration 
 
-## Official Documentation
+    class CreateItemsTable extends Migration
+    {
+        public function up()
+        {
+            Schema::create('items', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('title');
+                $table->text('description');
+                $table->timestamps();
+            });
+        }
+        public function down()
+        {
+            Schema::drop("items");
+        }
+    }
+    
+    //Run method with artisan
+    //php artisan migrate
 
-Documentation for the framework can be found on the [Laravel website](http://laravel.com/docs).
+##Composer.json
+        
+    "elasticquent/elasticquent": "dev-master",
+    "laravelcollective/html": "^5.2.0"
 
-## Contributing
+    //Add to require section at composer.json
+    
+##Item.php (Model)
+        
+    namespace App;
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](http://laravel.com/docs/contributions).
+    use Illuminate\Database\Eloquent\Model;
+    use Elasticquent\ElasticquentTrait;
 
-## Security Vulnerabilities
+    class Item extends Model
+    {
+        use ElasticquentTrait;
+        public $fillable = ['title','description'];
+    }
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+    //Don't forget use ElasticquentTrait
 
-## License
+##Routes.php
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+    Route::get('ItemSearch', 'ItemSearchController@index');
+    Route::post('ItemSearchCreate', 'ItemSearchController@create');
+
+##ItemSearchController.php
+
+    class ItemSearchController extends Controller
+    {
+        public function index(Request $request)
+        {
+            $items = Item::all()->toArray();
+            if($request->has('search')){
+                $items = Item::search($request->input('search'))->toArray();
+            }
+            return view('ItemSearch',compact('items'));
+        }
+
+
+        public function create(Request $request)
+        {
+            $this->validate($request, [
+                'title' => 'required',
+                'description' => 'required',
+            ]);
+
+            $item = Item::create($request->all());
+            $item->addToIndex(); // THIS IS REALLY IMPORTANT, DONT FORGET
+            return redirect()->back();
+        }
+
+    }
